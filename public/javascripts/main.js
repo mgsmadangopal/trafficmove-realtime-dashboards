@@ -1,17 +1,6 @@
 // Initialize websocket connection
 var socket = io.connect('http://localhost:3000');
 
-//Convert kafka messages arriving in tuples to arrays.
-var tupletoArray = function(tuple){
-	return tuple.split(", ").map(function(x){
-	//console.log(x);
-	var arr = x.substring(1,x.length-1).split(",");
-	//alert('inside tuple to array');
-	//alert(String(arr));
- 	return {label: arr[0], value: Number(arr[1])};
-});
-};
-
 // Create charts
 
 // Bounce Rate Line Chart
@@ -51,7 +40,7 @@ nv.addGraph(function(){
     return bounceRateLineChart;
 });
 
-// Average Time spent on domain line chart
+// Fuel Level chart
 var avgTimeSpentLineChart;
 var avgTimeSpentLineChartData = [
     {
@@ -86,125 +75,7 @@ nv.addGraph(function(){
     return avgTimeSpentLineChart;
 });
 
-// Visits by product category stacked area chart
-var hitsByCategoryBarChart;
-var hitsByCategoryBarChartData = [
-{
-	key: "Condo",
-	values: []
-},
-{
-	key: "Flood",
-	values: []
-},
-{
-	key: "Home Owner",
-	values: []
-},
-{
-	key: "Renters",
-	values: []
-},
-{
-	key: "Umbrella",
-	values: []
-},
-{
-	key: "Vehicle",
-	values: []
-}
-];
 
-nv.addGraph(function() {
-    hitsByCategoryBarChart = nv.models.stackedAreaChart()
-                  .margin({right: 100})
-                  .x(function(d) { return d[0]; })   //We can modify the data accessor functions...
-                  .y(function(d) { return d[1]; })   //...in case your data is formatted differently.
-                  .useInteractiveGuideline(true)    //Tooltips which show all data points. Very nice!
-                  .rightAlignYAxis(true)      //Let's move the y-axis to the right side.
-                  .showControls(true)       //Allow user to choose 'Stacked', 'Stream', 'Expanded' mode.
-                  .clipEdge(true)
-                  .color(d3.scale.category20().range());
-
-    //Format x-axis labels with custom function.
-    hitsByCategoryBarChart.xAxis
-        .axisLabel('Time')
-        .tickFormat(function(d){return d3.time.format('%H:%M:%S')(new Date(d));});
-
-    hitsByCategoryBarChart.yAxis
-    	.axisLabel('No. of Visits')
-        .tickFormat(d3.format(',.2f'));
-
-    d3.select('#hitsByCategory')
-    	.append('svg')
-    	.datum(hitsByCategoryBarChartData)
-    	.transition().duration(500)
-    	.call(hitsByCategoryBarChart);
-
-    nv.utils.windowResize(hitsByCategoryBarChart.update);
-
-    return hitsByCategoryBarChart;
-  });
-
-// Marketing by channels horizontal bar chart
-var marketingChannelsBarChart;
-var marketingChannelsBarChartData = [
-{
-	key: "Marketing Channels",
-	values: []
-}];
-
-nv.addGraph(function() {
-    marketingChannelsBarChart = nv.models.multiBarHorizontalChart()
-        .x(function(d) { return d.label; })
-        .y(function(d) { return d.value; })
-        .margin({top: 20, right: 20, bottom: 20, left: 100})
-        .showControls(false)        //Allow user to switch between "Grouped" and "Stacked" mode.
-        .barColor(d3.scale.category20().range());
-
-    marketingChannelsBarChart.yAxis
-        .tickFormat(d3.format(',.2f'));
-
-    d3.select('#topMarketingChannels')
-    	.append('svg')
-        .datum(marketingChannelsBarChartData)
-        .transition().duration(500)
-        .call(marketingChannelsBarChart);
-
-    nv.utils.windowResize(marketingChannelsBarChart.update);
-
-    return marketingChannelsBarChart;
-  });
-
-// Top 10 Bounce rate pages horizontal bar chart
-var bounceRateBarChart;
-var bounceRateBarChartData = [
-{
-	key: "Top 10 BR Pages",
-	values: []
-}];
-
-nv.addGraph(function() {
-    bounceRateBarChart = nv.models.multiBarHorizontalChart()
-        .x(function(d) { return d.label })
-        .y(function(d) { return d.value })
-        .margin({top: 20, right: 20, bottom: 20, left: 1})
-        .showControls(false)        //Allow user to switch between "Grouped" and "Stacked" mode.
-        .barColor(d3.scale.category20().range());
-
-    bounceRateBarChart.yAxis
-        .tickFormat(d3.format(',.2f'));
-
-    d3.select('#top10BounceRatePages')
-    	.append('svg')
-        .datum(bounceRateBarChartData)
-        .transition().duration(500)
-        .call(bounceRateBarChart);
-
-    nv.utils.windowResize(bounceRateBarChart.update);
-
-    return bounceRateBarChart;
-  });
 
 //--------------------------------------Socket.io event handlers------------------------------------
 
@@ -226,50 +97,5 @@ socket.on('traffic-data-input', function (data) {
 		avgTimeSpentLineChartData[0].values.shift();
 	}
 	avgTimeSpentLineChart.update();
-});
-
-pk.eyJ1IjoibWdzbWFkYW5nb3BhbCIsImEiOiJjampzaGRqMzcyc3BuM3ZvMTVnZXhlcWYzIn0.Fn4dMSLtqpJUeiPUkTkGIw
-
-var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js');
- 
-mapboxgl.accessToken = 'pk.eyJ1IjoibWdzbWFkYW5nb3BhbCIsImEiOiJjampzaGRqMzcyc3BuM3ZvMTVnZXhlcWYzIn0.Fn4dMSLtqpJUeiPUkTkGIw';
-var map = new mapboxgl.Map({
-container: 'YOUR_CONTAINER_ELEMENT_ID',
-style: 'mapbox://styles/mapbox/streets-v10'
-});
-
-//Stacked bar chart of time spent by insurance type 
-socket.on('traffic-data-input',function(data){
-	//var arr = tupletoArray(data.vehicleType);
-	//alert('inside stacked bar');
-	//alert(String(data.vehicleType));
-	hitsByCategoryBarChartData[0].values.push([ Date.now(), Number(data.speed)]);
-	hitsByCategoryBarChartData[1].values.push([ Date.now(), Number(data.fuelLevel)]);
-	hitsByCategoryBarChartData[2].values.push([ Date.now(), Number(data.longitude)]);
-	hitsByCategoryBarChartData[3].values.push([ Date.now(), Number(data.latitude)]);
-	//hitsByCategoryBarChartData[4].values.push([ Date.now(), Number(arr[4].value)]);
-	//hitsByCategoryBarChartData[5].values.push([ Date.now(), Number(arr[5].value)]);
-	if(hitsByCategoryBarChartData[0].values.length > 30) {
-		hitsByCategoryBarChartData[0].values.shift();
-		hitsByCategoryBarChartData[1].values.shift();
-		hitsByCategoryBarChartData[2].values.shift();
-		hitsByCategoryBarChartData[3].values.shift();
-		hitsByCategoryBarChartData[4].values.shift();
-		hitsByCategoryBarChartData[5].values.shift();
-	}
-	// console.log('error before update');
-	hitsByCategoryBarChart.update();
-});
-
-// top 10 marketing channels
-socket.on('traffic-data-input', function(data){
-	marketingChannelsBarChartData[0].values = tupletoArray(data.routeId);
-	marketingChannelsBarChart.update();
-});
-
-// top 10 bounce rate pages
-socket.on('traffic-data-input',function(data){
-	bounceRateBarChartData[0].values = tupletoArray(data);
-	bounceRateBarChart.update();
 });
 
